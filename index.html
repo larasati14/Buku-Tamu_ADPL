@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Aplikasi Daftar Tamu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .form-container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-container div {
+            margin-bottom: 10px;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-container input, 
+        .form-container textarea {
+            width: 100%;
+            padding: 8px;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .success {
+            color: green;
+            margin-bottom: 10px;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-hapus {
+            background-color: #f44336;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginContainer" class="form-container">
+        <h1>Login</h1>
+        <form id="formLogin">
+            <div>
+                <label>Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div>
+                <label>Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <div id="pesanLogin"></div>
+    </div>
+
+    <div id="appContainer" style="display: none;">
+        <h1>Aplikasi Daftar Tamu</h1>
+        <button id="logoutButton" class="btn">Logout</button>
+
+        <div class="form-container">
+            <form id="formTamu">
+                <div>
+                    <label>Nama Lengkap:</label>
+                    <input type="text" id="nama" required>
+                </div>
+                <div>
+                    <label>Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div>
+                    <label>Nomor Telepon:</label>
+                    <input type="tel" id="no_telepon" required>
+                </div>
+                <div>
+                    <label>Alamat:</label>
+                    <textarea id="alamat" required></textarea>
+                </div>
+                <div>
+                    <label>Keperluan:</label>
+                    <input type="text" id="keperluan" required>
+                </div>
+                <button type="submit" class="btn">Kirim Data Tamu</button>
+            </form>
+            <div id="pesan"></div>
+        </div>
+
+        <h2>Daftar Tamu</h2>
+        <table id="tabelTamu">
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>No. Telepon</th>
+                    <th>Alamat</th>
+                    <th>Keperluan</th>
+                    <th>Waktu Kunjungan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="daftarTamu">
+                <!-- Data tamu akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        class App {
+            constructor() {
+                this.initLogin();
+                this.initLogout();
+                this.manajemenTamu = new ManajemenTamu();
+            }
+
+            initLogin() {
+                const formLogin = document.getElementById('formLogin');
+                const loginContainer = document.getElementById('loginContainer');
+                const appContainer = document.getElementById('appContainer');
+                const pesanLogin = document.getElementById('pesanLogin');
+
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                if (isLoggedIn) {
+                    loginContainer.style.display = 'none';
+                    appContainer.style.display = 'block';
+                }
+
+                formLogin.addEventListener('submit', (e) => {
+                    e.preventDefault();
+
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+
+                    if (username === 'buku tamu online' && password === 'sehunganteng') {
+                        localStorage.setItem('isLoggedIn', 'true');
+                        loginContainer.style.display = 'none';
+                        appContainer.style.display = 'block';
+                        pesanLogin.innerHTML = '';
+                    } else {
+                        pesanLogin.innerHTML = 'Login gagal! Username atau password salah.';
+                        pesanLogin.className = 'error';
+                    }
+                });
+            }
+
+            initLogout() {
+                const logoutButton = document.getElementById('logoutButton');
+                logoutButton.addEventListener('click', () => {
+                    localStorage.removeItem('isLoggedIn');
+                    location.reload();
+                });
+            }
+        }
+
+        class ManajemenTamu {
+            constructor() {
+                this.formTamu = document.getElementById('formTamu');
+                this.daftarTamuElement = document.getElementById('daftarTamu');
+                this.pesanElement = document.getElementById('pesan');
+
+                this.initEventListeners();
+                this.muatDaftarTamu();
+            }
+
+            initEventListeners() {
+                this.formTamu.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.tambahTamu();
+                });
+            }
+
+            tambahTamu() {
+                const nama = document.getElementById('nama').value;
+                const email = document.getElementById('email').value;
+                const noTelepon = document.getElementById('no_telepon').value;
+                const alamat = document.getElementById('alamat').value;
+                const keperluan = document.getElementById('keperluan').value;
+
+                const tamu = {
+                    id: Date.now(),
+                    nama,
+                    email,
+                    noTelepon,
+                    alamat,
+                    keperluan,
+                    waktuKunjungan: new Date().toLocaleString(),
+                };
+
+                let daftarTamu = JSON.parse(localStorage.getItem('daftarTamu') || '[]');
+                daftarTamu.push(tamu);
+                localStorage.setItem('daftarTamu', JSON.stringify(daftarTamu));
+
+                this.formTamu.reset();
+                this.muatDaftarTamu();
+                this.tampilkanPesan('Data berhasil ditambahkan!', false);
+            }
+
+            muatDaftarTamu() {
+                const daftarTamu = JSON.parse(localStorage.getItem('daftarTamu') || '[]');
+                this.daftarTamuElement.innerHTML = daftarTamu.map(tamu => `
+                    <tr>
+                        <td>${tamu.nama}</td>
+                        <td>${tamu.email}</td>
+                        <td>${tamu.noTelepon}</td>
+                        <td>${tamu.alamat}</td>
+                        <td>${tamu.keperluan}</td>
+                        <td>${tamu.waktuKunjungan}</td>
+                        <td>
+                            <button onclick="manajemenTamu.hapusTamu(${tamu.id})">Hapus</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            hapusTamu(id) {
+                let daftarTamu = JSON.parse(localStorage.getItem('daftarTamu') || '[]');
+                daftarTamu = daftarTamu.filter(tamu => tamu.id !== id);
+                localStorage.setItem('daftarTamu', JSON.stringify(daftarTamu));
+                this.muatDaftarTamu();
+            }
+
+            tampilkanPesan(pesan, isError) {
+                this.pesanElement.textContent = pesan;
+                this.pesanElement.className = isError ? 'error' : 'success';
+            }
+        }
+
+        const app = new App();
+        const manajemenTamu = new ManajemenTamu();
+    </script>
+</body>
+</html>
